@@ -124,7 +124,22 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
 
 #####################################################
 #####################################################
+class MLPPolicyAC(MLPPolicy):
+    def update(self, observations, actions, adv_n=None):
+        # TODO: update the policy and return the loss
+        # observations = ptu.from_numpy(observations)
+        # actions = ptu.from_numpy(actions)
+        # advantages = ptu.from_numpy(adv_n)
+        
+        policy_action_dist = self(observations)
+        loss = -torch.mul(policy_action_dist.log_prob(actions), adv_n).sum()
 
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        return loss.item()
+    
 class MLPPolicyPG(MLPPolicy):
     def __init__(self, ac_dim, ob_dim, n_layers, size, **kwargs):
 
