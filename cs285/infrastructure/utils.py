@@ -65,6 +65,7 @@ def sample_trajectory(env, policy, max_path_length, render=False, render_mode=('
         # render image of the simulated env
         if render:
             print('test if render is true')
+            print(ob)
             if hasattr(env, 'sim'):
                 print(1)
                 image_obs.append(env.sim.render(camera_name='track', height=500, width=500)[::-1])
