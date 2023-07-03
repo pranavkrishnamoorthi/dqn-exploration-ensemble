@@ -2,6 +2,7 @@ import numpy as np
 
 from .base_agent import BaseAgent
 from cs285.policies.MLP_policy import MLPPolicyPG
+from cs285.policies.MLP_policy import MLPPolicyPPO
 from cs285.infrastructure.replay_buffer import ReplayBuffer
 
 
