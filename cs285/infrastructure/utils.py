@@ -135,7 +135,7 @@ def Path(obs, image_obs, acs, rewards, next_obs, terminals):
     if image_obs != []:
         image_obs = np.stack(image_obs, axis=0)
     return {"observation" : np.array(obs, dtype=np.float32),
-            "image_obs" : np.array(image_obs),
+            "image_obs" : np.array(image_obs, dtype=np.uint8),
             "reward" : np.array(rewards, dtype=np.float32),
             "action" : np.array(acs, dtype=np.float32),
             "next_observation": np.array(next_obs, dtype=np.float32),
