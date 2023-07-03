@@ -14,14 +14,6 @@ from gym.envs.registration import register
 import torch
 
 # https://stats.stackexchange.com/questions/7440/kl-divergence-between-two-univariate-gaussians#%20kl-divergence-between-two-univariate-gaussians
-def kl_div_univariate(mu_p, sigma_p, mu_q, sigma_q):
-
-    return 0.5 * (2 * torch.log(sigma_p / sigma_q) - 1 + (sigma_q / sigma_p).pow(2) + ((mu_p - mu_q) / sigma_p).pow(2)).sum()
-
-def kl_div(mu_p, sigma_p, mu_q, sigma_q):
-    return torch.log(sigma_
-    return 0.5 * (2 * torch.log(sigma_p / sigma_q) - 1 + (sigma_q / sigma_p).pow(2) + ((mu_p - mu_q) / sigma_p).pow(2)).sum()
-
 
 
 class Flatten(torch.nn.Module):
