@@ -217,6 +217,10 @@ class MLPPolicyPPO(MLPPolicy):
         policy_action_dist = self(observations).probs
         policy_action_dist_old = self(observations).probs.clone().detach()
 
+        #what is the shape of policy_action_dist?
+        print('policy_action_dist ', policy_action_dist.shape)
+        print('policy_action_dist_old ', policy_action_dist_old.shape)
+
         loss1 = torch.div(policy_action_dist, policy_action_dist_old).mul(advantages)
         loss2 = torch.clamp(torch.divide(policy_action_dist, policy_action_dist_old), 1 - self.epsilon, 1 + self.epsilon).mul(advantages)
 
