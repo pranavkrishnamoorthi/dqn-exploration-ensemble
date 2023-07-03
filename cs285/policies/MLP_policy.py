@@ -214,8 +214,8 @@ class MLPPolicyPPO(MLPPolicy):
         actions = ptu.from_numpy(actions)
         advantages = ptu.from_numpy(advantages)
 
-        policy_action_dist = self(observations)
-        policy_action_dist_old = self(observations).clone().detach()
+        policy_action_dist = self(observations).probs
+        policy_action_dist_old = self(observations).probs.clone().detach()
 
         loss1 = torch.div(policy_action_dist, policy_action_dist_old).mul(advantages)
         loss2 = torch.clamp(torch.divide(policy_action_dist, policy_action_dist_old), 1 - self.epsilon, 1 + self.epsilon).mul(advantages)
