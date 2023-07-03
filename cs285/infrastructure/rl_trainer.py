@@ -16,6 +16,7 @@ from cs285.infrastructure import utils
 from cs285.infrastructure.logger import Logger
 
 from cs285.agents.dqn_agent import DQNAgent
+from cs285.agents.sac_agent import SACAgent
 from cs285.infrastructure.dqn_utils import (
         get_wrapper_by_name,
         register_custom_envs,
