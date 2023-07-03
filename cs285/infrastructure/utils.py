@@ -69,6 +69,7 @@ def sample_trajectory(env, policy, max_path_length, render=False, render_mode=('
                 image_obs.append(env.sim.render(camera_name='track', height=500, width=500)[::-1])
             else:
                 image_obs.append(env.render())
+            print('last image obs', image_obs[-1])
 
         # use the most recent ob to decide what to do
         obs.append(ob)
