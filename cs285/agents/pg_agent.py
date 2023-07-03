@@ -19,7 +19,7 @@ class PGAgent(BaseAgent):
         self.gae_lambda = self.agent_params['gae_lambda']
 
         # actor/policy
-        self.actor = MLPPolicyPG(
+        self.actor = MLPPolicyPPO(
             self.agent_params['ac_dim'],
             self.agent_params['ob_dim'],
             self.agent_params['n_layers'],
