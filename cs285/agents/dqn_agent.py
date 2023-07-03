@@ -87,7 +87,7 @@ class DQNAgent(object):
 
     def sample(self, batch_size):
         if self.replay_buffer.can_sample(self.batch_size):
-            return self.replay_buffer. (batch_size)
+            return self.replay_buffer(batch_size)
         else:
             return [],[],[],[],[]
 
