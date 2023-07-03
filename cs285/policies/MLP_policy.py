@@ -125,19 +125,125 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
 #####################################################
 #####################################################
 
+class MLPPolicyPG(MLPPolicy):
+    def __init__(self, ac_dim, ob_dim, n_layers, size, **kwargs):
 
-class MLPPolicyAC(MLPPolicy):
-    def update(self, observations, actions, adv_n=None):
-        # TODO: update the policy and return the loss
-        # observations = ptu.from_numpy(observations)
-        # actions = ptu.from_numpy(actions)
-        # advantages = ptu.from_numpy(adv_n)
-        
+        super().__init__(ac_dim, ob_dim, n_layers, size, **kwargs)
+        self.baseline_loss = nn.MSELoss()
+
+    def update(self, observations, actions, advantages, q_values=None):
+        observations = ptu.from_numpy(observations)
+        actions = ptu.from_numpy(actions)
+        advantages = ptu.from_numpy(advantages)
+
+        # TODO: update the policy using policy gradient
+        # HINT1: Recall that the expression that we want to MAXIMIZE
+            # is the expectation over collected trajectories of:
+            # sum_{t=0}^{T-1} [grad [log pi(a_t|s_t) * (Q_t - b_t)]]
+        # HINT2: you will want to use the `log_prob` method on the distribution returned
+            # by the `forward` method
+
         policy_action_dist = self(observations)
-        loss = -torch.mul(policy_action_dist.log_prob(actions), adv_n).sum()
+        # should I do mean?
+        loss = -torch.mul(policy_action_dist.log_prob(actions), advantages).sum()
 
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
 
-        return loss.item()
+        if self.nn_baseline:
+            ## TODO: update the neural network baseline using the q_values as
+            ## targets. The q_values should first be normalized to have a mean
+            ## of zero and a standard deviation of one.
+
+            ## Note: You will need to convert the targets into a tensor using
+                ## ptu.from_numpy before using it in the loss
+            q_values = (q_values - np.mean(q_values)) / (np.std(q_values) + 1e-8)
+            q_values = ptu.from_numpy(q_values)
+            baseline_loss = self.baseline_loss(self.baseline(observations).squeeze(), q_values)
+
+            print('baseline loss ', ptu.to_numpy(baseline_loss))
+            self.baseline_optimizer.zero_grad()
+            baseline_loss.backward()
+            self.baseline_optimizer.step()
+
+
+        train_log = {
+            'Training Loss': ptu.to_numpy(loss),
+        }
+        return train_log
+
+    def run_baseline_prediction(self, observations):
+        """
+            Helper function that converts `observations` to a tensor,
+            calls the forward method of the baseline MLP,
+            and returns a np array
+
+            Input: `observations`: np.ndarray of size [N, 1]
+            Output: np.ndarray of size [N]
+
+        """
+        observations = ptu.from_numpy(observations)
+        pred = self.baseline(observations)
+        return ptu.to_numpy(pred.squeeze())
+    
+# https://spinningup.openai.com/en/latest/algorithms/ppo.html
+class MLPPolicyPPO(MLPPolicy):
+    def __init__(self, ac_dim, ob_dim, n_layers, size, **kwargs):
+
+        super().__init__(ac_dim, ob_dim, n_layers, size, **kwargs)
+        self.baseline_loss = nn.MSELoss()
+    
+    def update(self, observations, actions, advantages, q_values=None):
+        observations = ptu.from_numpy(observations)
+        actions = ptu.from_numpy(actions)
+        advantages = ptu.from_numpy(advantages)
+
+        policy_action_dist = self(observations)
+        policy_action_dist_old = self(observations).clone().detach()
+
+        loss1 = torch.div(policy_action_dist, policy_action_dist_old).mul(advantages)
+        loss2 = torch.clamp(torch.divide(policy_action_dist, policy_action_dist_old), 1 - self.epsilon, 1 + self.epsilon).mul(advantages)
+
+        # should I do mean?
+        loss = -torch.minimum(loss1, loss2).sum()
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        if self.nn_baseline:
+            ## TODO: update the neural network baseline using the q_values as
+            ## targets. The q_values should first be normalized to have a mean
+            ## of zero and a standard deviation of one.
+
+            ## Note: You will need to convert the targets into a tensor using
+                ## ptu.from_numpy before using it in the loss
+            q_values = (q_values - np.mean(q_values)) / (np.std(q_values) + 1e-8)
+            q_values = ptu.from_numpy(q_values)
+            baseline_loss = self.baseline_loss(self.baseline(observations).squeeze(), q_values)
+
+            print('baseline loss ', ptu.to_numpy(baseline_loss))
+            self.baseline_optimizer.zero_grad()
+            baseline_loss.backward()
+            self.baseline_optimizer.step()
+
+
+        train_log = {
+            'Training Loss': ptu.to_numpy(loss),
+        }
+        return train_log
+
+    def run_baseline_prediction(self, observations):
+        """
+            Helper function that converts `observations` to a tensor,
+            calls the forward method of the baseline MLP,
+            and returns a np array
+
+            Input: `observations`: np.ndarray of size [N, 1]
+            Output: np.ndarray of size [N]
+
+        """
+        observations = ptu.from_numpy(observations)
+        pred = self.baseline(observations)
+        return ptu.to_numpy(pred.squeeze())
+

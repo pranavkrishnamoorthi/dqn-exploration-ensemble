@@ -2,90 +2,55 @@ import os
 import time
 
 from cs285.infrastructure.rl_trainer import RL_Trainer
-from cs285.agents.dqn_agent import DQNAgent
+from cs285.agents.ppo_agent import PPOAgent
+
+from cs285.critics.dqn_critic import DQNCritic
+
 from cs285.infrastructure.dqn_utils import get_env_kwargs
 from typing import List
-import dqn_utils
 
-
-class Q_Trainer(object):
+class Trainer(object):
 
     def __init__(self, params):
-        self.params = params
+
+        #####################
+        ## SET AGENT PARAMS
+        #####################
+
+        estimate_advantage_args = {
+            'gamma': params['discount'],
+        }
 
         train_args = {
             'num_agent_train_steps_per_iter': params['num_agent_train_steps_per_iter'],
             'num_critic_updates_per_agent_update': params['num_critic_updates_per_agent_update'],
-            'train_batch_size': params['batch_size'],
-            'double_q': params['double_q'],
+            'num_actor_updates_per_agent_update': params['num_actor_updates_per_agent_update'],
         }
 
-        env_args = get_env_kwargs(params['env_name'])
+        agent_params = {**computation_graph_args, **estimate_advantage_args, **train_args}
 
-        self.agent_params = {**train_args, **env_args, **params}
+        self.params = params
+        self.params['agent_class'] = PPOAgent
+        self.params['agent_params'] = agent_params
+        self.params['batch_size_initial'] = self.params['batch_size']
+        
 
-        self.params['agent_class'] = DQNAgent
-        self.params['agent_params'] = self.agent_params
-        self.params['train_batch_size'] = params['batch_size']
-        self.params['env_wrappers'] = self.agent_params['env_wrappers']
+        #create the Q function ensemble list
+        self.q_list = [DQNCritic() for _ in range(self.num_q)]
+
+        ################
+        ## RL TRAINER
+        ################
 
         self.rl_trainer = RL_Trainer(self.params)
 
-
     def run_training_loop(self):
-        self.rl_trainer.run_training_loop(
-            self.agent_params['num_timesteps'],
+        self.rl_trainer.run_sac_training_loop(
+            self.params['n_iter'],
             collect_policy = self.rl_trainer.agent.actor,
             eval_policy = self.rl_trainer.agent.actor,
-        )
-
-class VCL_Q_Trainer(object):
-    def __init__(self, params):
-        self.state_action_coresets = []
-        self.target_corsets = []
-        
-        # self.initial_prior = ? (should be a standard normal Guassian over the q function paramaters)
-
-        #TODO: Implement VCL_Q_Trainer, initialize the critic network here
-        # see https://arxiv.org/pdf/1905.02099.pdf for determining details on weight initialization
-        # self.params = params
-
-        # train_args = {
-        #     'num_agent_train_steps_per_iter': params['num_agent_train_steps_per_iter'],
-        #     'num_critic_updates_per_agent_update': params['num_critic_updates_per_agent_update'],
-        #     'train_batch_size': params['batch_size'],
-        #     'double_q': params['double_q'],
-        # }
-
-        # # task_args = [get_env_kwargs(task) for task in params['tasks']]
-        # self.agent_params = {**train_args, **task_args, **params}
-
-        # self.params['agent_class'] = DQNAgent
-        # self.params['agent_params'] = self.agent_params
-        # self.params['train_batch_size'] = params['batch_size']
-        # self.params['env_wrappers'] = self.agent_params['env_wrappers']
-
-        # self.rl_trainer = RL_Trainer(self.params)
-
-    def update_prior(self, prior):
-        pass
-
-    def run_vcl_training_loop(self):
-        
-        for task_id in range(len(self.params['tasks'])):
-
-            self.rl_trainer.run_training_loop(
-                self.env_name 
-                self.agent_params['num_timesteps'],
-                collect_policy = self.rl_trainer.agent.actor,
-                eval_policy = self.rl_trainer.agent.actor,
             )
 
-
-        
-
-
-        
 
 def main():
 
@@ -147,3 +112,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+

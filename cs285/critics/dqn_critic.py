@@ -114,8 +114,5 @@ class DQNCritic(BaseCritic):
         qa_values = self.q_net(obs)
         return ptu.to_numpy(qa_values)
 
-    def kl_term(self):
-        const_term = -0.5 * no_weights
-        
 
     
