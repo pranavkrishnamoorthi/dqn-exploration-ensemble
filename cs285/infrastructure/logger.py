@@ -29,25 +29,25 @@ class Logger:
     def log_paths_as_videos(self, paths, step, max_videos_to_save=2, fps=10, video_title='video'):
 
         # reshape the rollouts
-        print(paths[0]['image_obs'])
-        videos = [np.transpose(p['image_obs'], [0, 3, 1, 2]) for p in paths]
+        if paths[0]['image_obs']:
+            videos = [np.transpose(p['image_obs'], [0, 3, 1, 2]) for p in paths]
 
-        # max rollout length
-        max_videos_to_save = np.min([max_videos_to_save, len(videos)])
-        max_length = videos[0].shape[0]
-        for i in range(max_videos_to_save):
-            if videos[i].shape[0]>max_length:
-                max_length = videos[i].shape[0]
+            # max rollout length
+            max_videos_to_save = np.min([max_videos_to_save, len(videos)])
+            max_length = videos[0].shape[0]
+            for i in range(max_videos_to_save):
+                if videos[i].shape[0]>max_length:
+                    max_length = videos[i].shape[0]
 
-        # pad rollouts to all be same length
-        for i in range(max_videos_to_save):
-            if videos[i].shape[0]<max_length:
-                padding = np.tile([videos[i][-1]], (max_length-videos[i].shape[0],1,1,1))
-                videos[i] = np.concatenate([videos[i], padding], 0)
+            # pad rollouts to all be same length
+            for i in range(max_videos_to_save):
+                if videos[i].shape[0]<max_length:
+                    padding = np.tile([videos[i][-1]], (max_length-videos[i].shape[0],1,1,1))
+                    videos[i] = np.concatenate([videos[i], padding], 0)
 
-        # log videos to tensorboard event file
-        videos = np.stack(videos[:max_videos_to_save], 0)
-        self.log_video(videos, video_title, step, fps=fps)
+            # log videos to tensorboard event file
+            videos = np.stack(videos[:max_videos_to_save], 0)
+            self.log_video(videos, video_title, step, fps=fps)
 
     def log_figures(self, figure, name, step, phase):
         """figure: matplotlib.pyplot figure handle"""
