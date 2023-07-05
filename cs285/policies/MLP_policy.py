@@ -214,15 +214,16 @@ class MLPPolicyPPO(MLPPolicy):
         actions = ptu.from_numpy(actions)
         advantages = ptu.from_numpy(advantages)
 
-        policy_action_dist = self(observations).probs
-        policy_action_dist_old = self(observations).probs.clone().detach()
+        #how do I store the old policy action dist to calculate the ratio?
+
+
+        policy_action_dist = self(observations)
 
         #what is the shape of policy_action_dist?
         print('policy_action_dist ', policy_action_dist.shape)
-        print('policy_action_dist_old ', policy_action_dist_old.shape)
-
-        loss1 = torch.div(policy_action_dist, policy_action_dist_old).mul(advantages)
-        loss2 = torch.clamp(torch.divide(policy_action_dist, policy_action_dist_old), 1 - self.epsilon, 1 + self.epsilon).mul(advantages)
+        ratio = torch.exp(policy_action_dist.log_prob(actions) - policy_action_dist.log_prob(actions).clone().detach())
+        loss1 = ratio.mul(advantages)
+        loss2 = torch.clamp(ratio, 1 - self.epsilon, 1 + self.epsilon).mul(advantages)
 
         # should I do mean?
         loss = -torch.minimum(loss1, loss2).sum()
